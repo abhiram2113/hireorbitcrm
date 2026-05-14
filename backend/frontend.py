@@ -1,5 +1,6 @@
 import streamlit as st
 import sqlite3
+import requests
 
 # ======================================================
 # PAGE CONFIG
@@ -116,7 +117,7 @@ def login_user(username, password):
     return cursor.fetchone()
 
 # ======================================================
-# SESSION STATE
+# SESSION
 # ======================================================
 
 if "logged_in" not in st.session_state:
@@ -134,16 +135,6 @@ if "username" not in st.session_state:
 st.markdown("""
 
 <style>
-
-/* ======================================================
-GLOBAL
-====================================================== */
-
-html, body, [class*="css"] {
-
-    font-family: 'Segoe UI', sans-serif;
-
-}
 
 /* ======================================================
 BACKGROUND
@@ -203,15 +194,9 @@ section[data-testid="stSidebar"] {
 
 }
 
-/* ======================================================
-SIDEBAR TEXT
-====================================================== */
-
 section[data-testid="stSidebar"] * {
 
     color: white !important;
-
-    font-weight: 600;
 
 }
 
@@ -257,40 +242,6 @@ SUBTITLE
 }
 
 /* ======================================================
-LOGIN CARD
-====================================================== */
-
-.login-card {
-
-    background: rgba(255,255,255,0.08);
-
-    border-radius: 24px;
-
-    padding: 35px;
-
-    border: 1px solid rgba(255,255,255,0.1);
-
-}
-
-/* ======================================================
-METRIC BOX
-====================================================== */
-
-.metric-box {
-
-    background: rgba(255,255,255,0.08);
-
-    border-radius: 20px;
-
-    padding: 30px;
-
-    text-align: center;
-
-    border: 1px solid rgba(255,255,255,0.08);
-
-}
-
-/* ======================================================
 GLASS CARD
 ====================================================== */
 
@@ -305,6 +256,24 @@ GLASS CARD
     border: 1px solid rgba(255,255,255,0.08);
 
     margin-bottom: 20px;
+
+}
+
+/* ======================================================
+METRIC CARD
+====================================================== */
+
+.metric-box {
+
+    background: rgba(255,255,255,0.08);
+
+    border-radius: 20px;
+
+    padding: 30px;
+
+    text-align: center;
+
+    border: 1px solid rgba(255,255,255,0.08);
 
 }
 
@@ -346,8 +315,6 @@ TEXT INPUTS
 
     border-radius: 14px !important;
 
-    font-weight: 600;
-
 }
 
 /* ======================================================
@@ -361,8 +328,6 @@ TEXT AREA
     color: black !important;
 
     border-radius: 14px !important;
-
-    font-weight: 600;
 
 }
 
@@ -384,8 +349,6 @@ FILE UPLOADER
 
     color: black !important;
 
-    font-weight: 600 !important;
-
 }
 
 /* ======================================================
@@ -394,37 +357,11 @@ SELECTBOX
 
 .stSelectbox div[data-baseweb="select"] {
 
-    background: rgba(255,255,255,0.1) !important;
-
-    border-radius: 14px !important;
-
-    color: white !important;
-
-}
-
-/* ======================================================
-TABS
-====================================================== */
-
-.stTabs [data-baseweb="tab"] {
-
     background: rgba(255,255,255,0.08);
 
-    border-radius: 12px;
+    border-radius: 14px;
 
-    color: white;
-
-    font-weight: 700;
-
-}
-
-.stTabs [aria-selected="true"] {
-
-    background: linear-gradient(
-        90deg,
-        #6366f1,
-        #8b5cf6
-    ) !important;
+    color: white !important;
 
 }
 
@@ -476,137 +413,109 @@ if not st.session_state.logged_in:
 
     """, unsafe_allow_html=True)
 
-    col1, col2, col3 = st.columns([1,2,1])
+    tab1, tab2 = st.tabs([
 
-    with col2:
+        "🔐 Login",
 
-        st.markdown(
+        "✨ Sign Up"
 
-            '<div class="login-card">',
+    ])
 
-            unsafe_allow_html=True
+    # LOGIN
+
+    with tab1:
+
+        username = st.text_input(
+
+            "Username"
 
         )
 
-        tab1, tab2 = st.tabs([
+        password = st.text_input(
 
-            "🔐 Login",
+            "Password",
 
-            "✨ Sign Up"
-
-        ])
-
-        # LOGIN
-
-        with tab1:
-
-            username = st.text_input(
-
-                "Username",
-
-                key="login_user"
-
-            )
-
-            password = st.text_input(
-
-                "Password",
-
-                type="password",
-
-                key="login_pass"
-
-            )
-
-            if st.button("Login"):
-
-                user = login_user(
-
-                    username,
-
-                    password
-
-                )
-
-                if user:
-
-                    st.session_state.logged_in = True
-
-                    st.session_state.username = username
-
-                    st.rerun()
-
-                else:
-
-                    st.error(
-
-                        "Invalid Username or Password"
-
-                    )
-
-        # SIGNUP
-
-        with tab2:
-
-            new_user = st.text_input(
-
-                "Create Username",
-
-                key="signup_user"
-
-            )
-
-            new_pass = st.text_input(
-
-                "Create Password",
-
-                type="password",
-
-                key="signup_pass"
-
-            )
-
-            if st.button("Create Account"):
-
-                result = create_user(
-
-                    new_user,
-
-                    new_pass
-
-                )
-
-                if result == "success":
-
-                    st.success(
-
-                        "Account Created Successfully"
-
-                    )
-
-                elif result == "exists":
-
-                    st.warning(
-
-                        "Username Already Exists"
-
-                    )
-
-                else:
-
-                    st.error(
-
-                        "Please Fill All Fields"
-
-                    )
-
-        st.markdown(
-
-            '</div>',
-
-            unsafe_allow_html=True
+            type="password"
 
         )
+
+        if st.button("Login"):
+
+            user = login_user(
+
+                username,
+
+                password
+
+            )
+
+            if user:
+
+                st.session_state.logged_in = True
+
+                st.session_state.username = username
+
+                st.rerun()
+
+            else:
+
+                st.error(
+
+                    "Invalid Username or Password"
+
+                )
+
+    # SIGNUP
+
+    with tab2:
+
+        new_user = st.text_input(
+
+            "Create Username"
+
+        )
+
+        new_pass = st.text_input(
+
+            "Create Password",
+
+            type="password"
+
+        )
+
+        if st.button("Create Account"):
+
+            result = create_user(
+
+                new_user,
+
+                new_pass
+
+            )
+
+            if result == "success":
+
+                st.success(
+
+                    "Account Created Successfully"
+
+                )
+
+            elif result == "exists":
+
+                st.warning(
+
+                    "Username Already Exists"
+
+                )
+
+            else:
+
+                st.error(
+
+                    "Please Fill All Fields"
+
+                )
 
     st.stop()
 
@@ -773,7 +682,7 @@ with tab1:
         st.success("ATS Analysis Completed")
 
 # ======================================================
-# JOB TAB
+# JOB APPLICATIONS TAB
 # ======================================================
 
 with tab2:
@@ -788,43 +697,191 @@ with tab2:
 
     """, unsafe_allow_html=True)
 
-    st.selectbox(
+    domains = [
 
-        "Choose Domain",
+        "python",
+        "java",
+        "react",
+        "nodejs",
+        "software-engineer",
+        "frontend",
+        "backend",
+        "fullstack",
+        "data-science",
+        "machine-learning",
+        "ai-engineer",
+        "devops",
+        "cloud",
+        "cybersecurity",
+        "aws",
+        "azure",
+        "docker",
+        "kubernetes",
+        "flutter",
+        "android",
+        "ios",
+        "ui-ux",
+        "product-manager",
+        "business-analyst",
+        "qa",
+        "testing",
+        "salesforce",
+        "sap",
+        "oracle",
+        "sql",
+        "mongodb",
+        "php",
+        "laravel",
+        "django",
+        "flask",
+        "golang",
+        "rust",
+        "c++",
+        "dotnet",
+        "typescript",
+        "angular",
+        "vue",
+        "blockchain",
+        "web3",
+        "crypto",
+        "powerbi",
+        "tableau",
+        "etl",
+        "data-engineer",
+        "prompt-engineer"
 
-        [
+    ]
 
-            "python",
+    us_states = [
 
-            "react",
+        "Alabama","Alaska","Arizona","Arkansas","California",
+        "Colorado","Connecticut","Delaware","Florida","Georgia",
+        "Hawaii","Idaho","Illinois","Indiana","Iowa","Kansas",
+        "Kentucky","Louisiana","Maine","Maryland","Massachusetts",
+        "Michigan","Minnesota","Mississippi","Missouri","Montana",
+        "Nebraska","Nevada","New Hampshire","New Jersey","New Mexico",
+        "New York","North Carolina","North Dakota","Ohio","Oklahoma",
+        "Oregon","Pennsylvania","Rhode Island","South Carolina",
+        "South Dakota","Tennessee","Texas","Utah","Vermont",
+        "Virginia","Washington","West Virginia","Wisconsin","Wyoming"
 
-            "java",
+    ]
 
-            "data-science"
+    col1, col2 = st.columns(2)
 
-        ]
+    with col1:
 
-    )
+        domain = st.selectbox(
 
-    st.selectbox(
+            "Choose Job Domain",
 
-        "Select State",
+            domains
 
-        [
+        )
 
-            "California",
+    with col2:
 
-            "Texas",
+        state = st.selectbox(
 
-            "Florida"
+            "Select US State",
 
-        ]
+            us_states
 
-    )
+        )
 
-    if st.button("Load Fresh Jobs"):
+    if st.button("🚀 Load Fresh Jobs"):
 
-        st.success("50 Fresh Jobs Loaded")
+        with st.spinner("Loading jobs..."):
+
+            try:
+
+                url = f"https://remotive.com/api/remote-jobs?search={domain}"
+
+                response = requests.get(url)
+
+                data = response.json()
+
+                jobs = data.get("jobs", [])
+
+                if jobs:
+
+                    st.success(
+
+                        f"{len(jobs)} jobs found"
+
+                    )
+
+                    for job in jobs[:50]:
+
+                        title = job.get(
+
+                            "title",
+
+                            "No Title"
+
+                        )
+
+                        company = job.get(
+
+                            "company_name",
+
+                            "Unknown"
+
+                        )
+
+                        category = job.get(
+
+                            "category",
+
+                            "N/A"
+
+                        )
+
+                        job_url = job.get(
+
+                            "url",
+
+                            "#"
+
+                        )
+
+                        st.markdown(f"""
+
+                        <div class="glass-card">
+
+                        <h3>💼 {title}</h3>
+
+                        <p><b>🏢 Company:</b> {company}</p>
+
+                        <p><b>📍 Location:</b> {state}, USA</p>
+
+                        <p><b>🧠 Domain:</b> {category}</p>
+
+                        <a href="{job_url}" target="_blank">
+
+                        🔗 Apply Now
+
+                        </a>
+
+                        </div>
+
+                        """, unsafe_allow_html=True)
+
+                else:
+
+                    st.warning(
+
+                        "No jobs found"
+
+                    )
+
+            except Exception as e:
+
+                st.error(
+
+                    f"Error loading jobs: {e}"
+
+                )
 
 # ======================================================
 # APPLIED JOBS TAB
@@ -842,4 +899,8 @@ with tab3:
 
     """, unsafe_allow_html=True)
 
-    st.info("No applied jobs yet.")
+    st.info(
+
+        "No applied jobs yet."
+
+    )
